@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>notepad ++ by Mr.Rm19</title>
+    
+    <!-- CodeMirror Stylesheet -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/theme/dracula.min.css">
+    
+    <!-- Custom Styling for the Editor -->
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .editor {
+            flex-grow: 1;
+            padding: 10px;
+            background-color: #121212;
+            color: #FFFFFF;
+            border: 1px solid #00ff00;
+        }
+        .actions {
+            background-color: #333;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .actions button {
+            padding: 10px;
+            border: none;
+            background-color: #00ff00;
+            color: black;
+            cursor: pointer;
+        }
+        .actions button:hover {
+            background-color: #00cc00;
+        }
+        .output {
+            margin-top: 20px;
+            background-color: #ffffff;
+            border: 1px solid #00ff00;
+            padding: 10px;
+        }
+        iframe {
+            width: 100%;
+            height: 300px;
+            border: 1px solid #00ff00;
+            background-color: #ffffff;
+        }
+        #imageUpload {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="editor-container">
+        <!-- Editor Actions: Save, Undo, Redo, Upload Image, Save As Any File -->
+        <div class="actions">
+            <button id="saveButton">Save</button>
+            <button id="undoButton">Undo</button>
+            <button id="redoButton">Redo</button>
+            <button id="uploadImageButton">Upload Image</button>
+            <button id="saveFileButton">Save As Any File</button>
+        </div>
+
+        <!-- CodeMirror Editor -->
+        <textarea id="editor" class="editor"></textarea>
+
+        <div class="output">
+            <h2><font color="red">HTML Viewer by Mr.Rm19 - ini notepad ++ versi web</h2>
+            <iframe id="htmlViewer"></iframe>
+        </div>
+    </div>
+
+    <!-- CodeMirror Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/addon/hint/javascript-hint.min.js"></script>
+
+    <script>
+        // Initialize CodeMirror Editor with hacker-theme and syntax highlighting
+        var editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+            mode: "text/html",   // For HTML syntax highlighting
+            lineNumbers: true,   // Show line numbers
+            theme: "dracula",    // Set the theme to 'dracula' (dark mode with neon colors)
+            matchBrackets: true, // Matching brackets
+            autoCloseBrackets: true, // Auto-closing brackets
+            extraKeys: {"Ctrl-Space": "autocomplete"} // Auto-completion trigger
+        });
+
+        // Update HTML viewer with the content of the editor
+        editor.on('change', function() {
+            var code = editor.getValue();
+            var htmlViewer = document.getElementById('htmlViewer');
+            htmlViewer.srcdoc = code;  // Update the iframe content with editor's HTML
+        });
+
+        // Save button functionality
+        document.getElementById("saveButton").addEventListener("click", function() {
+            var code = editor.getValue();  // Get the content from the editor
+            var blob = new Blob([code], {type: "text/html;charset=utf-8"});
+            var link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "code.html";  // Set default file name
+            link.click();
+        });
+
+        // Save As Any File button functionality
+        document.getElementById("saveFileButton").addEventListener("click", function() {
+            var code = editor.getValue();  // Get the content from the editor
+            var fileName = prompt("Enter the file name (without extension):", "file");
+            var fileExtension = prompt("Enter the file extension (e.g., .html, .txt):", ".html");
+
+            if (fileName && fileExtension) {
+                var blob = new Blob([code], {type: "text/plain;charset=utf-8"});
+                var link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = fileName + fileExtension;  // Save with user-defined name and extension
+                link.click();
+            }
+        });
+
+        // Undo button functionality
+        document.getElementById("undoButton").addEventListener("click", function() {
+            editor.undo();  // Undo last action
+        });
+
+        // Redo button functionality
+        document.getElementById("redoButton").addEventListener("click", function() {
+            editor.redo();  // Redo last undone action
+        });
+
+        // Upload Image button functionality
+        document.getElementById("uploadImageButton").addEventListener("click", function() {
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.click();
+
+            input.onchange = function(event) {
+                var file = event.target.files[0];
+                var reader = new FileReader();
+
+                reader.onload = function(e) {
+                    var imgTag = `<img src="${e.target.result}" alt="Uploaded Image" style="max-width:100%; height:auto;">`;
+                    editor.replaceSelection(imgTag);  // Insert image HTML tag into the editor
+                };
+
+                reader.readAsDataURL(file);  // Read the image as data URL
+            };
+        });
+    </script>
+
+</body>
+</html>
